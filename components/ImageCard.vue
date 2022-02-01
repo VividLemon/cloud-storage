@@ -1,0 +1,75 @@
+<template>
+  <v-dialog v-model="dialog" fullscreen>
+    <template #activator="{on, attrs}">
+      <v-card v-bind="attrs" v-on="on">
+        <v-img
+          :src="`/api/images/${item}`"
+          height="250"
+          lazy-src="/placeholder.png"
+          position="top"
+        >
+          <template #placeholder>
+            <v-row
+              class="fill-height ma-0"
+              align="center"
+              justify="center"
+            >
+              <v-progress-circular
+                indeterminate
+                color="cyan"
+              />
+            </v-row>
+          </template>
+        </v-img>
+        <v-card-title>
+          {{ item }}
+        </v-card-title>
+      </v-card>
+    </template>
+    <v-card>
+      <v-toolbar
+        color="primary"
+      >
+        <v-btn
+          icon
+          aria-label="Close"
+          @click="dialog = false"
+        >
+          <v-icon>mdi-close</v-icon>
+        </v-btn>
+        <v-toolbar-title>
+          {{ item }}
+        </v-toolbar-title>
+      </v-toolbar>
+      <v-img
+        :src="`/api/images/${item}`"
+        max-height="75vh"
+        contain
+        class="ma-2"
+      />
+    </v-card>
+    <image-card-confirm-dialog :name="item" />
+  </v-dialog>
+</template>
+
+<script>
+import ImageCardConfirmDialog from './ImageCardConfirmDialog.vue'
+export default {
+	components: { ImageCardConfirmDialog },
+	props: {
+		item: {
+			type: String,
+			required: true
+		}
+	},
+	data() {
+		return {
+			dialog: false
+		}
+	}
+}
+</script>
+
+<style>
+
+</style>
