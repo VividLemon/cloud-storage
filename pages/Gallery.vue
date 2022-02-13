@@ -34,14 +34,15 @@
   </div>
 </template>
 
-<script>
+<script lang="ts">
+import Vue from 'vue'
 import ImageCard from '~/components/ImageCard.vue'
 import SpaceUsedBar from '~/components/SpaceUsedBar.vue'
 import ToolBar from '~/components/ToolBar.vue'
-export default {
+export default Vue.extend({
 	name: 'HomePage',
 	components: { ToolBar, ImageCard, SpaceUsedBar },
-	data() {
+	data(): {files: Array<string>, totalSize: number, imagesSize: number, maxLength: number, filter: Array<string>, refreshing: boolean, maxSpace: number} {
 		return {
 			files: [],
 			totalSize: 0,
@@ -60,26 +61,26 @@ export default {
 			this.imagesSize = imagesSize
 			this.totalSize = imagesSize + othersSize
 		}
-		catch (err) {
-			this.$nuxt.error()
+		catch (err: any) {
+			this.$nuxt.error({ message: err })
 		}
 		finally {
 			this.refreshing = false
 		}
 	},
 	computed: {
-		allTypes() {
+		allTypes(): Array<string> {
 			const map = this.files.map((el) => el.slice(el.lastIndexOf('.') + 1).toLowerCase())
 			return [...new Set(map)]
 		}
 	},
 	methods: {
-		handleFilterChange(filter) {
+		handleFilterChange(filter: Array<string>): void {
 			this.filter = filter
 		},
-		isFiltered(item) {
+		isFiltered(item: string): boolean {
 			return (this.filter.length) ? this.filter.includes(item.slice(item.lastIndexOf('.') + 1).toLowerCase()) : true
 		}
 	}
-}
+})
 </script>

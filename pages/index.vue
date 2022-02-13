@@ -53,15 +53,16 @@
   </v-form>
 </template>
 
-<script>
+<script lang="ts">
+import Vue from 'vue'
 // TODO needs pagination, fix up toolbar, doesn't look great. Then create all files page, same toolbar
 // All files needs api backend to serve up files. Which is complicated
 import { validationMixin } from 'vuelidate'
 import { required } from 'vuelidate/lib/validators'
-export default {
+export default Vue.extend({
 	name: 'IndexPage',
 	mixins: [validationMixin],
-	data() {
+	data(): {username: string, password: string, loading: boolean, snackbar: boolean} {
 		return {
 			username: '',
 			password: '',
@@ -71,13 +72,13 @@ export default {
 	},
 	computed: {
 		usernameErrors() {
-			const errors = []
+			const errors: Array<string> = []
 			if (!this.$v.username.$dirty) { return errors }
 			!this.$v.username.required && errors.push('Field required')
 			return errors
 		},
 		passwordErrors() {
-			const errors = []
+			const errors: Array<string> = []
 			if (!this.$v.password.$dirty) { return errors }
 			!this.$v.password.required && errors.push('Field required')
 			return errors
@@ -97,9 +98,9 @@ export default {
 		}
 	},
 	methods: {
-		async login() {
+		async login(): Promise<void> {
 			this.$v.$touch()
-			if (this.$v.$anyError) { return false }
+			if (this.$v.$anyError) { return }
 			this.loading = true
 			try {
 				await this.$auth.loginWith('local', { data: { name: this.username, password: this.password } })
@@ -112,5 +113,5 @@ export default {
 			}
 		}
 	}
-}
+})
 </script>

@@ -52,9 +52,10 @@
   </v-dialog>
 </template>
 
-<script>
+<script lang="ts">
+import Vue from 'vue'
 import ImageCardConfirmDialog from './ImageCardConfirmDialog.vue'
-export default {
+export default Vue.extend({
 	components: { ImageCardConfirmDialog },
 	props: {
 		item: {
@@ -62,12 +63,12 @@ export default {
 			required: true
 		}
 	},
-	data() {
+	data(): {dialog: boolean} {
 		return {
 			dialog: false
 		}
 	}
-}
+})
 </script>
 
 <style>

@@ -15,9 +15,10 @@
   </v-card>
 </template>
 
-<script>
+<script lang="ts">
+import Vue from 'vue'
 import SyncIcon from './SyncIcon.vue'
-export default {
+export default Vue.extend({
 	components: { SyncIcon },
 	props: {
 		fileTypes: {
@@ -31,18 +32,17 @@ export default {
 			default: false
 		}
 	},
-	emits: ['filterChanged', 'refresh-clicked'],
-	data() {
+	data(): {filtered: Array<number>} {
 		return {
 			filtered: []
 		}
 	},
 	computed: {
-		filteredValues() {
-			return this.filtered.map((index) => this.fileTypes[index])
+		filteredValues(): Array<string> {
+			return this.filtered.map((index) => (this.fileTypes as Array<string>)[index])
 		}
 	}
-}
+})
 </script>
 
 <style>

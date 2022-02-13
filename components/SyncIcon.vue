@@ -21,16 +21,16 @@
   </v-btn>
 </template>
 
-<script>
-export default {
+<script lang="ts">
+import Vue from 'vue'
+export default Vue.extend({
 	props: {
 		refreshing: {
 			type: Boolean,
 			default: false
 		}
-	},
-	emits: ['refresh-clicked']
-}
+	}
+})
 </script>
 
 <style>

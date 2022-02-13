@@ -46,8 +46,10 @@
   </v-app>
 </template>
 
-<script>
-export default {
+<script lang="ts">
+import { RefreshableScheme } from '@nuxtjs/auth-next'
+import Vue from 'vue'
+export default Vue.extend({
 	name: 'DefaultLayout',
 	data() {
 		return {
@@ -80,11 +82,16 @@ export default {
 		}
 	},
 	methods: {
-		logout() {
-			if (this.$auth.loggedIn) {
-				this.$auth.logout({ data: { token: this.$auth.strategy.refreshToken.get() } })
+		async logout(): Promise<void> {
+			try {
+				if (this.$auth.loggedIn) {
+					await this.$auth.logout({ data: { token: (this.$auth.strategy as RefreshableScheme).refreshToken.get() } })
+				}
+			}
+			catch (err: any) {
+				this.$nuxt.error({ message: err })
 			}
 		}
 	}
-}
+})
 </script>

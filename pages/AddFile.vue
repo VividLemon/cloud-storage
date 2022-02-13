@@ -21,12 +21,13 @@
   </div>
 </template>
 
-<script>
+<script lang="ts">
+import Vue from 'vue'
 import { validationMixin } from 'vuelidate'
 import { required } from 'vuelidate/lib/validators'
-export default {
+export default Vue.extend({
 	mixins: [validationMixin],
-	data() {
+	data(): {customName: string, files: Array<File>} {
 		return {
 			customName: '',
 			files: []
@@ -34,7 +35,7 @@ export default {
 	},
 	computed: {
 		filesErrors() {
-			const errors = []
+			const errors: Array<string> = []
 			if (!this.$v.files.$dirty) return errors
 			!this.$v.files.required && errors.push('A file is required to upload')
 			return errors
@@ -56,7 +57,7 @@ export default {
 			return true
 		}
 	}
-}
+})
 </script>
 
 <style>

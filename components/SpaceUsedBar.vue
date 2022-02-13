@@ -13,8 +13,9 @@
   </v-container>
 </template>
 
-<script>
-export default {
+<script lang="ts">
+import Vue from 'vue'
+export default Vue.extend({
 	props: {
 		totalSize: {
 			type: Number,
@@ -38,25 +39,25 @@ export default {
 		}
 	},
 	computed: {
-		percentUsed() {
+		percentUsed(): number {
 			return Math.ceil(this.totalSize / this.maxSpace)
 		},
-		totalSizeFormatted() {
+		totalSizeFormatted(): string {
 			if (this.totalSize === 0) return '0 Bytes'
 			const k = 1024
 			const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB']
 			const i = Math.floor(Math.log(this.totalSize) / Math.log(k))
-			return parseFloat((this.totalSize / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
+			return `${Number.parseFloat((this.totalSize / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`
 		},
-		maxSpaceFormatted() {
+		maxSpaceFormatted(): string {
 			if (this.maxSpace === 0) return '0 Bytes'
 			const k = 1024
 			const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB']
 			const i = Math.floor(Math.log(this.maxSpace) / Math.log(k))
-			return parseFloat((this.maxSpace / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
+			return `${Number.parseFloat((this.maxSpace / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`
 		}
 	}
-}
+})
 </script>
 
 <style>
