@@ -1,9 +1,9 @@
 <template>
-  <v-card>
-    <v-card-text>
-      <v-row align="center" justify="center">
+  <v-sheet>
+    <v-container>
+      <v-row align="center" justify="center" dense>
         <v-col>
-          <v-btn-toggle v-model="filtered" multiple @change="$emit('filterChanged', filteredValues)">
+          <v-btn-toggle v-model="filtered" multiple @change="$emit('input', filteredValues)">
             <v-btn v-for="(type, index) in fileTypes" :key="index">
               {{ type }}
             </v-btn>
@@ -11,8 +11,8 @@
           <sync-icon :refreshing="refreshing" @refresh-clicked="$emit('refresh-clicked')" />
         </v-col>
       </v-row>
-    </v-card-text>
-  </v-card>
+    </v-container>
+  </v-sheet>
 </template>
 
 <script lang="ts">
@@ -21,6 +21,12 @@ import SyncIcon from './SyncIcon.vue'
 export default Vue.extend({
 	components: { SyncIcon },
 	props: {
+		value: {
+			type: Array,
+			default: () => {
+				return []
+			}
+		},
 		fileTypes: {
 			type: Array,
 			default: () => {
@@ -34,7 +40,7 @@ export default Vue.extend({
 	},
 	data(): {filtered: Array<number>} {
 		return {
-			filtered: []
+			filtered: this.value as Array<number>
 		}
 	},
 	computed: {

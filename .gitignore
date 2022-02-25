@@ -98,3 +98,7 @@ sw.*
 
 # Public folder
 /api/public
+
+.vscode/
+
+*.sqlite

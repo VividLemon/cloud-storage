@@ -57,19 +57,19 @@ export default Vue.extend({
 			navs: [
 				{
 					value: 'gallery',
-					to: 'Gallery',
+					to: 'gallery',
 					text: 'Gallery',
 					icon: 'mdi-image-multiple'
 				},
 				{
 					value: 'addItem',
-					to: 'AddFile',
+					to: 'add-file',
 					text: 'Add File',
 					icon: 'mdi-plus'
 				},
 				{
 					value: 'allFiles',
-					to: 'AllFiles',
+					to: 'all-files',
 					text: 'Files',
 					icon: 'mdi-file-multiple'
 				}

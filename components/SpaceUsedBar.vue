@@ -21,10 +21,6 @@ export default Vue.extend({
 			type: Number,
 			default: 0
 		},
-		maxSpace: {
-			type: Number,
-			default: 0
-		},
 		warnPercent: {
 			type: Number,
 			default: 75
@@ -36,6 +32,19 @@ export default Vue.extend({
 		okColor: {
 			type: String,
 			default: 'blue'
+		}
+	},
+	data() {
+		return {
+			maxSpace: 0
+		}
+	},
+	async fetch() {
+		try {
+			this.maxSpace = await this.$axios.$get('/api/system/max-space')
+		}
+		catch (err) {
+			this.maxSpace = 0
 		}
 	},
 	computed: {

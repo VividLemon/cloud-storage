@@ -4,7 +4,7 @@ import { User, Token } from './models'
 
 const sequelize = new Sequelize({
 	dialect: 'sqlite',
-	storage: join(__dirname, 'db.sqlite')
+	storage: join(process.cwd(), 'api', 'sequelize', 'db.sqlite')
 })
 
 export const models = {

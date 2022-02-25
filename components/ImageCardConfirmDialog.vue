@@ -28,7 +28,7 @@
         <v-btn color="primary" @click="confirmDialog = false">
           No
         </v-btn>
-        <v-btn color="error">
+        <v-btn color="error" @click="confirmDelete">
           Yes
         </v-btn>
       </v-card-actions>
@@ -48,6 +48,12 @@ export default Vue.extend({
 	data(): {confirmDialog: boolean} {
 		return {
 			confirmDialog: false
+		}
+	},
+	methods: {
+		confirmDelete() {
+			this.$emit('delete-confirm')
+			this.confirmDialog = false
 		}
 	}
 })

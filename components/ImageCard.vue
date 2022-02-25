@@ -3,7 +3,7 @@
     <template #activator="{on, attrs}">
       <v-card v-bind="attrs" v-on="on">
         <v-img
-          :src="`/api/images/${item}`"
+          :src="`/api/public/${item}`"
           height="250"
           lazy-src="/placeholder.png"
           position="top"
@@ -22,7 +22,7 @@
           </template>
         </v-img>
         <v-card-title>
-          {{ item }}
+          {{ fileName }}
         </v-card-title>
       </v-card>
     </template>
@@ -42,13 +42,16 @@
         </v-toolbar-title>
       </v-toolbar>
       <v-img
-        :src="`/api/images/${item}`"
+        :src="`/api/public/${item}`"
         max-height="75vh"
         contain
         class="ma-2"
       />
     </v-card>
-    <image-card-confirm-dialog :name="item" />
+    <image-card-confirm-dialog
+      :name="item"
+      @delete-confirm="deleteConfirm"
+    />
   </v-dialog>
 </template>
 
@@ -66,6 +69,17 @@ export default Vue.extend({
 	data(): {dialog: boolean} {
 		return {
 			dialog: false
+		}
+	},
+	computed: {
+		fileName(): string {
+			return this.item.slice(this.item.lastIndexOf('/') + 1)
+		}
+	},
+	methods: {
+		deleteConfirm() {
+			this.$emit('delete-confirm')
+			this.dialog = false
 		}
 	}
 })

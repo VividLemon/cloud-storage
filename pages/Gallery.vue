@@ -1,37 +1,55 @@
 <template>
-  <div>
-    <v-container>
-      <v-row>
-        <v-col>
-          <space-used-bar :max-space="maxSpace" :total-size="totalSize" />
-        </v-col>
-      </v-row>
-      <v-row>
-        <v-col>
-          <tool-bar
-            :file-types="allTypes"
-            :refreshing="refreshing"
-            @filterChanged="handleFilterChange"
-            @refresh-clicked="$fetch"
-          />
-        </v-col>
-      </v-row>
-      <v-row>
-        <v-col
-          v-for="(item, index) in files"
-          v-show="isFiltered(item)"
-          :key="index"
-          cols="12"
-          sm="6"
-          md="4"
-          lg="3"
-          xl="2"
+  <v-container>
+    <v-row dense>
+      <v-col>
+        <space-used-bar :total-size="totalSize" />
+      </v-col>
+    </v-row>
+    <v-row>
+      <v-col>
+        <tool-bar
+          v-model="filter"
+          :file-types="allTypes"
+          :refreshing="refreshing"
+          @refresh-clicked="$fetch"
+        />
+      </v-col>
+    </v-row>
+    <v-row>
+      <v-col
+        v-for="(item, index) in files"
+        v-show="isFiltered(item)"
+        :key="index"
+        cols="12"
+        sm="6"
+        md="4"
+        lg="3"
+        xl="2"
+      >
+        <image-card
+          :item="item"
+          @delete-confirm="deleteItem(item)"
+        />
+      </v-col>
+    </v-row>
+    <v-snackbar
+      v-model="snackbar.snack"
+      :color="snackbar.color"
+      top
+    >
+      {{ snackbar.text }}
+      <template #action="{ attrs }">
+        <v-btn
+          color="pink"
+          text
+          v-bind="attrs"
+          @click="snackbar.snack = false"
         >
-          <image-card :item="item" />
-        </v-col>
-      </v-row>
-    </v-container>
-  </div>
+          Close
+        </v-btn>
+      </template>
+    </v-snackbar>
+  </v-container>
 </template>
 
 <script lang="ts">
@@ -40,17 +58,19 @@ import ImageCard from '~/components/ImageCard.vue'
 import SpaceUsedBar from '~/components/SpaceUsedBar.vue'
 import ToolBar from '~/components/ToolBar.vue'
 export default Vue.extend({
-	name: 'HomePage',
+	name: 'GalleryPage',
 	components: { ToolBar, ImageCard, SpaceUsedBar },
-	data(): {files: Array<string>, totalSize: number, imagesSize: number, maxLength: number, filter: Array<string>, refreshing: boolean, maxSpace: number} {
+	data(): {files: Array<string>, totalSize: number, filter: Array<string>, refreshing: boolean, snackbar: {snack: boolean, text: string, color: string}} {
 		return {
 			files: [],
 			totalSize: 0,
-			imagesSize: 0,
-			maxLength: 2,
 			filter: [],
 			refreshing: false,
-			maxSpace: 1000000000
+			snackbar: {
+				snack: false,
+				text: '',
+				color: 'primary'
+			}
 		}
 	},
 	async fetch() {
@@ -58,7 +78,6 @@ export default Vue.extend({
 			this.refreshing = true
 			this.files = await this.$axios.$get('/api/system/images')
 			const { imagesSize, othersSize } = await this.$axios.$get('/api/system/all-size')
-			this.imagesSize = imagesSize
 			this.totalSize = imagesSize + othersSize
 		}
 		catch (err: any) {
@@ -75,11 +94,26 @@ export default Vue.extend({
 		}
 	},
 	methods: {
-		handleFilterChange(filter: Array<string>): void {
-			this.filter = filter
-		},
 		isFiltered(item: string): boolean {
 			return (this.filter.length) ? this.filter.includes(item.slice(item.lastIndexOf('.') + 1).toLowerCase()) : true
+		},
+		async deleteItem(file: string): Promise<void> {
+			try {
+				const response = await this.$axios.$delete('/api/upload/', {
+					data: { file }
+				})
+				this.snackbar.text = response
+				this.snackbar.color = 'success'
+				this.snackbar.snack = true
+			}
+			catch (err: any) {
+				this.snackbar.text = `Error: ${err?.response?.data ?? 'No response'}`
+				this.snackbar.color = 'error'
+				this.snackbar.snack = true
+			}
+			finally {
+				this.$fetch()
+			}
 		}
 	}
 })

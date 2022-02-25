@@ -18,7 +18,7 @@ export default {
 	},
 
 	server: {
-		port: 8080
+		port: 80
 	},
 
 	serverMiddleware: {
@@ -61,7 +61,7 @@ export default {
 	auth: {
 		redirect: {
 			callback: '/',
-			home: '/home',
+			home: '/Gallery',
 			login: '/',
 			logout: '/'
 		},

@@ -1,71 +1,97 @@
 import { join } from 'path'
 import { readdir, stat } from 'fs/promises'
-import { Request, Response } from 'express'
+import { NextFunction, Request, Response } from 'express'
+import { imagesPublicFolderPath, otherPublicFolderPath } from '../../'
 
-export const index = (_req: Request, res: Response) => {
-	res.sendStatus(201)
-}
-
-export const getImagesSize = async (_req: Request, res: Response) => {
-	const path = join(__dirname, '../', '../', 'public')
-	const images = await readdir(join(path, 'images'))
-	const sizes = []
-	for (const file of images) {
-		const { size } = await stat(join(path, 'images', file))
-		sizes.push(size)
+export const getImagesSize = async (_req: Request, res: Response, next: NextFunction) => {
+	try {
+		const images = await readdir(imagesPublicFolderPath)
+		const sizes = []
+		for (const file of images) {
+			const { size } = await stat(join(imagesPublicFolderPath, file))
+			sizes.push(size)
+		}
+		const totalSize = sizes.reduce((total, el) => total + el, 0)
+		return res.json(totalSize)
 	}
-	const totalSize = sizes.reduce((total, el) => total + el)
-	return res.json(totalSize)
-}
-
-export const getOthersSize = async (_req: Request, res: Response) => {
-	const path = join(__dirname, '../', '../', 'public')
-	const other = await readdir(join(path, 'other'))
-	const sizes = []
-	for (const file of other) {
-		const { size } = await stat(join(path, 'other', file))
-		sizes.push(size)
+	catch (err) {
+		next(err)
 	}
-	const totalSize = sizes.reduce((total, el) => total + el)
-	return res.json(totalSize)
 }
 
-export const getPublicDirSize = async (_req: Request, res: Response) => {
-	const path = join(__dirname, '../', '../', 'public')
-	const other = await readdir(join(path, 'other'))
-	const images = await readdir(join(path, 'images'))
-	const imagesArr = [0]
-	const othersArr = [0]
-	for (const file of other) {
-		const { size } = await stat(join(path, 'other', file))
-		othersArr.push(size)
+export const getOthersSize = async (_req: Request, res: Response, next: NextFunction) => {
+	try {
+		const other = await readdir(otherPublicFolderPath)
+		const sizes = []
+		for (const file of other) {
+			const { size } = await stat(join(otherPublicFolderPath, file))
+			sizes.push(size)
+		}
+		const totalSize = sizes.reduce((total, el) => total + el, 0)
+		return res.json(totalSize)
 	}
-	for (const file of images) {
-		const { size } = await stat(join(path, 'images', file))
-		imagesArr.push(size)
+	catch (err) {
+		next(err)
 	}
-	const obj = {
-		imagesSize: imagesArr.reduce((total, el) => total + el),
-		othersSize: othersArr.reduce((total, el) => total + el)
+}
+
+export const getPublicDirSize = async (_req: Request, res: Response, next: NextFunction) => {
+	try {
+		const other = await readdir(otherPublicFolderPath)
+		const images = await readdir(imagesPublicFolderPath)
+		const imagesArr = []
+		const othersArr = []
+		for (const file of other) {
+			const { size } = await stat(join(otherPublicFolderPath, file))
+			othersArr.push(size)
+		}
+		for (const file of images) {
+			const { size } = await stat(join(imagesPublicFolderPath, file))
+			imagesArr.push(size)
+		}
+		const obj = {
+			imagesSize: imagesArr.reduce((total, el) => total + el, 0),
+			othersSize: othersArr.reduce((total, el) => total + el, 0)
+		}
+		return res.json(obj)
 	}
-	return res.json(obj)
+	catch (err) {
+		next(err)
+	}
 }
 
-export const getImages = async (_req: Request, res: Response) => {
-	const path = join(__dirname, '../', '../', 'public')
-	const images = await readdir(join(path, 'images'))
-	return res.json(images)
+export const getMaxSpace = (_req: Request, res: Response, _next: NextFunction) => {
+	const space = (process.env.MAX_SPACE_ALLOWED_BYTES != null) ? Number.parseInt(process.env.MAX_SPACE_ALLOWED_BYTES) : 0
+	return res.json(space)
 }
 
-export const getOther = async (_req: Request, res: Response) => {
-	const path = join(__dirname, '../', '../', 'public')
-	const other = await readdir(join(path, 'other'))
-	return res.json(other)
+export const getImages = async (_req: Request, res: Response, next: NextFunction) => {
+	try {
+		const images = (await readdir(imagesPublicFolderPath)).map((el) => join('images', el))
+		return res.json(images)
+	}
+	catch (err) {
+		next(err)
+	}
 }
 
-export const getAll = async (_req: Request, res: Response) => {
-	const path = join(__dirname, '../', '../', 'public')
-	const images = await readdir(join(path, 'images'))
-	const other = await readdir(join(path, 'other'))
-	return res.json({ images, other })
+export const getOther = async (_req: Request, res: Response, next: NextFunction) => {
+	try {
+		const other = (await readdir(otherPublicFolderPath)).map((el) => join('other', el))
+		return res.json(other)
+	}
+	catch (err) {
+		next(err)
+	}
+}
+
+export const getAll = async (_req: Request, res: Response, next: NextFunction) => {
+	try {
+		const images = (await readdir(imagesPublicFolderPath)).map((el) => join('images', el))
+		const other = (await readdir(otherPublicFolderPath)).map((el) => join('other', el))
+		return res.json({ images, other })
+	}
+	catch (err) {
+		next(err)
+	}
 }

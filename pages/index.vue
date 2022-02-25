@@ -55,8 +55,6 @@
 
 <script lang="ts">
 import Vue from 'vue'
-// TODO needs pagination, fix up toolbar, doesn't look great. Then create all files page, same toolbar
-// All files needs api backend to serve up files. Which is complicated
 import { validationMixin } from 'vuelidate'
 import { required } from 'vuelidate/lib/validators'
 export default Vue.extend({
@@ -94,7 +92,7 @@ export default Vue.extend({
 	},
 	beforeCreate() {
 		if (this.$auth.loggedIn) {
-			this.$router.push('Gallery')
+			this.$router.push('gallery')
 		}
 	},
 	methods: {
