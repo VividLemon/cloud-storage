@@ -17,3 +17,7 @@ for (const value of Object.values(models)) {
 }
 
 sequelize.sync()
+
+export {
+	sequelize
+}

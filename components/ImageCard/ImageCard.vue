@@ -22,7 +22,9 @@
           </template>
         </v-img>
         <v-card-title>
-          {{ fileName }}
+          <span>
+            {{ fileName }}
+          </span>
         </v-card-title>
       </v-card>
     </template>
@@ -57,7 +59,7 @@
 
 <script lang="ts">
 import Vue from 'vue'
-import ImageCardConfirmDialog from './ImageCardConfirmDialog.vue'
+import ImageCardConfirmDialog from '../ImageCardConfirmDialog/ImageCardConfirmDialog.vue'
 export default Vue.extend({
 	components: { ImageCardConfirmDialog },
 	props: {
@@ -77,7 +79,7 @@ export default Vue.extend({
 		}
 	},
 	methods: {
-		deleteConfirm() {
+		deleteConfirm(): void {
 			this.$emit('delete-confirm')
 			this.dialog = false
 		}

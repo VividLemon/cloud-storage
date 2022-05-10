@@ -54,9 +54,9 @@
 
 <script lang="ts">
 import Vue from 'vue'
-import ImageCard from '~/components/ImageCard.vue'
-import SpaceUsedBar from '~/components/SpaceUsedBar.vue'
-import ToolBar from '~/components/ToolBar.vue'
+import ImageCard from '~/components/ImageCard/ImageCard.vue'
+import SpaceUsedBar from '~/components/SpaceUsedBar/SpaceUsedBar.vue'
+import ToolBar from '~/components/ToolBar/ToolBar.vue'
 export default Vue.extend({
 	name: 'GalleryPage',
 	components: { ToolBar, ImageCard, SpaceUsedBar },
@@ -73,7 +73,7 @@ export default Vue.extend({
 			}
 		}
 	},
-	async fetch() {
+	async fetch(): Promise<void> {
 		try {
 			this.refreshing = true
 			this.files = await this.$axios.$get('/api/system/images')

@@ -2,7 +2,7 @@ import { Router } from 'express'
 import passport from 'passport'
 import { getPublicDirSize, getImages, getAll, getImagesSize, getOther, getOthersSize, getMaxSpace } from './system.dataaccess'
 
-export const getSystemRoutes = () => {
+export const getSystemRoutes = (): Router => {
 	const router = Router()
 	router.get('/images-size',
 		passport.authenticate('jwt', { session: false }),

@@ -1,5 +1,6 @@
 <template>
   <v-btn
+    id="sync-button"
     :loading="refreshing"
     tile
     text

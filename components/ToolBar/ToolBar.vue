@@ -17,18 +17,18 @@
 
 <script lang="ts">
 import Vue from 'vue'
-import SyncIcon from './SyncIcon.vue'
+import SyncIcon from '../SyncIcon/SyncIcon.vue'
 export default Vue.extend({
 	components: { SyncIcon },
 	props: {
 		value: {
-			type: Array,
+			type: Array as () => Array<number>,
 			default: () => {
 				return []
 			}
 		},
 		fileTypes: {
-			type: Array,
+			type: Array as () => Array<string>,
 			default: () => {
 				return []
 			}
@@ -40,12 +40,12 @@ export default Vue.extend({
 	},
 	data(): {filtered: Array<number>} {
 		return {
-			filtered: this.value as Array<number>
+			filtered: [...this.value]
 		}
 	},
 	computed: {
 		filteredValues(): Array<string> {
-			return this.filtered.map((index) => (this.fileTypes as Array<string>)[index])
+			return this.filtered.map((index) => this.fileTypes[index])
 		}
 	}
 })

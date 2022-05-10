@@ -103,8 +103,8 @@
 
 <script lang="ts">
 import Vue from 'vue'
-import SpaceUsedBar from '~/components/SpaceUsedBar.vue'
-import ToolBar from '~/components/ToolBar.vue'
+import SpaceUsedBar from '~/components/SpaceUsedBar/SpaceUsedBar.vue'
+import ToolBar from '~/components/ToolBar/ToolBar.vue'
 export default Vue.extend({
 	name: 'GalleryPage',
 	components: { ToolBar, SpaceUsedBar },
@@ -130,7 +130,7 @@ export default Vue.extend({
 			}
 		}
 	},
-	async fetch() {
+	async fetch(): Promise<void> {
 		this.refreshing = true
 		try {
 			const { images, other } = await this.$axios.$get('/api/system/all')

@@ -69,13 +69,13 @@ export default Vue.extend({
 		}
 	},
 	computed: {
-		usernameErrors() {
+		usernameErrors(): Array<string> {
 			const errors: Array<string> = []
 			if (!this.$v.username.$dirty) { return errors }
 			!this.$v.username.required && errors.push('Field required')
 			return errors
 		},
-		passwordErrors() {
+		passwordErrors(): Array<string> {
 			const errors: Array<string> = []
 			if (!this.$v.password.$dirty) { return errors }
 			!this.$v.password.required && errors.push('Field required')
@@ -90,7 +90,7 @@ export default Vue.extend({
 			required
 		}
 	},
-	beforeCreate() {
+	beforeCreate(): void {
 		if (this.$auth.loggedIn) {
 			this.$router.push('gallery')
 		}

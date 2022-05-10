@@ -21,7 +21,7 @@ const mult = multer({
 	}
 })
 
-export const getUploadRoutes = () => {
+export const getUploadRoutes = (): Router => {
 	const router = Router()
 	router.post('',
 		passport.authenticate('jwt', { session: false }),

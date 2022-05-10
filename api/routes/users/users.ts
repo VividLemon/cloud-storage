@@ -7,7 +7,7 @@ import { show } from './users.dataacces'
  * Returns an express router with the users routes
  * @returns express router
  */
-export const getUserRoutes = () => {
+export const getUserRoutes = (): Router => {
 	const router = Router()
 	router.get('',
 		passport.authenticate('jwt', { session: false }),

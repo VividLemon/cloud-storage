@@ -6,7 +6,7 @@ import { login, logout, verifyJWT } from './auth.dataaccess'
  * Returns an express router with the auth routes
  * @returns express router
  */
-export const getAuthRoutes = () => {
+export const getAuthRoutes = (): Router => {
 	const router = Router()
 	router.post('/refresh',
 		// Validate

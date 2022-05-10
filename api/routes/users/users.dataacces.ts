@@ -9,28 +9,35 @@ import { ApiError } from '../../error'
  * @param response  the express response
  * @returns status 400 if error, otherwise decoded jwt
  */
-export const show = (req: Request, res: Response, next: NextFunction) => {
+export const show = (req: Request, res: Response, next: NextFunction): void => {
 	const errors = validationResult(req)
 	if (!errors.isEmpty()) {
-		return res.status(400).json({ errors: errors.array() })
+		next(ApiError.validationErrors(errors.array()))
+		return
 	}
-	const auth = req.headers.authorization
-	if (auth == null) {
-		return next(ApiError.unauthorized())
+	if (process.env.ACCESS_TOKEN_SECRET == null) {
+		next(ApiError.environmentNotSet())
+		return
 	}
-	const [scheme, credentials] = auth.split(' ')
-	if (scheme == null || scheme !== 'Bearer') {
-		return next(ApiError.badRequest('Auth not bearer'))
-	}
-	if (credentials == null) {
-		return next(ApiError.badRequest('Auth missing credentials'))
-	}
-	verify(credentials, process.env.ACCESS_TOKEN_SECRET!, (err, decoded) => {
-		if (err || decoded == null) {
-			return next(ApiError.forbidden())
+	try {
+		const auth = req.headers.authorization
+		if (auth == null) {
+			next(ApiError.unauthorized())
+			return
 		}
-		else {
-			return res.json(decoded)
+		const [scheme, credentials] = auth.split(' ')
+		if (scheme == null || scheme !== 'Bearer') {
+			next(ApiError.badRequest('Auth not bearer'))
+			return
 		}
-	})
+		if (credentials == null) {
+			next(ApiError.badRequest('Auth missing credentials'))
+			return
+		}
+		const decoded = verify(credentials, process.env.ACCESS_TOKEN_SECRET)
+		res.json(decoded)
+	}
+	catch (err) {
+		next(err)
+	}
 }

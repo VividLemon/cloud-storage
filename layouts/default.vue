@@ -24,7 +24,8 @@
     </v-app-bar>
     <v-main>
       <v-container class="mb-14">
-        <Nuxt />
+        <Nuxt keep-alive :keep-alive-props="{ max: 10 }" />
+        <!-- TODO see if this causes issues in the future -->
       </v-container>
     </v-main>
     <v-bottom-navigation
@@ -51,7 +52,7 @@ import { RefreshableScheme } from '@nuxtjs/auth-next'
 import Vue from 'vue'
 export default Vue.extend({
 	name: 'DefaultLayout',
-	data() {
+	data(): {value: string, navs: Array<{value: string, to: string, text: string, icon: string}>} {
 		return {
 			value: 'gallery',
 			navs: [
@@ -77,7 +78,7 @@ export default Vue.extend({
 		}
 	},
 	watch: {
-		$route() {
+		$route(): void {
 			this.value = this.navs.find((el) => el.to === this.$route.name)?.value ?? this.navs[0].value
 		}
 	},

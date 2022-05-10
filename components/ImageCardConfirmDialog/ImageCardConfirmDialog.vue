@@ -25,10 +25,10 @@
       </v-card-text>
       <v-card-actions>
         <v-spacer />
-        <v-btn color="primary" @click="confirmDialog = false">
+        <v-btn id="no-button" color="primary" @click="confirmDialog = false">
           No
         </v-btn>
-        <v-btn color="error" @click="confirmDelete">
+        <v-btn id="yes-button" color="error" @click="confirmDelete">
           Yes
         </v-btn>
       </v-card-actions>
@@ -51,7 +51,7 @@ export default Vue.extend({
 		}
 	},
 	methods: {
-		confirmDelete() {
+		confirmDelete(): void {
 			this.$emit('delete-confirm')
 			this.confirmDialog = false
 		}

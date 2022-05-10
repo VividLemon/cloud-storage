@@ -1,8 +1,10 @@
 <template>
   <v-container>
     <v-row dense>
-      <v-col>
-        {{ totalSizeFormatted }} / {{ maxSpaceFormatted }} total
+      <v-col id="space-total">
+        <span>
+          {{ totalSizeFormatted }} / {{ maxSpaceFormatted }} total
+        </span>
       </v-col>
     </v-row>
     <v-row dense>
@@ -34,12 +36,12 @@ export default Vue.extend({
 			default: 'blue'
 		}
 	},
-	data() {
+	data(): {maxSpace: number} {
 		return {
 			maxSpace: 0
 		}
 	},
-	async fetch() {
+	async fetch(): Promise<void> {
 		try {
 			this.maxSpace = await this.$axios.$get('/api/system/max-space')
 		}
@@ -49,7 +51,10 @@ export default Vue.extend({
 	},
 	computed: {
 		percentUsed(): number {
-			return Math.ceil(this.totalSize / this.maxSpace)
+			if (this.maxSpace === 0) {
+				return 0
+			}
+			return Math.ceil((this.totalSize / this.maxSpace) * 100)
 		},
 		totalSizeFormatted(): string {
 			if (this.totalSize === 0) return '0 Bytes'

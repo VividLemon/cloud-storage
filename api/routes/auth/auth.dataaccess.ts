@@ -2,8 +2,26 @@ import { compare } from 'bcrypt'
 import { NextFunction, Request, Response } from 'express'
 import { validationResult } from 'express-validator'
 import { verify, sign } from 'jsonwebtoken'
+import { RateLimiterMemory } from 'rate-limiter-flexible'
 import { ApiError } from '../../error'
 import { models } from '../../sequelize'
+
+const maxWrongAttemptsByIPperDay = 100
+const maxConsecutiveFailsByUsernameAndIP = 10
+
+const limiterSlowBruteByIP: RateLimiterMemory = new RateLimiterMemory({
+	keyPrefix: 'login_fail_ip_per_day',
+	points: maxWrongAttemptsByIPperDay,
+	duration: 60 * 60 * 24,
+	blockDuration: 60 * 60 * 24
+})
+
+const limiterConsecutiveFailsByUsernameAndIP: RateLimiterMemory = new RateLimiterMemory({
+	keyPrefix: 'login_fail_consecutive_username_and_ip',
+	points: maxConsecutiveFailsByUsernameAndIP,
+	duration: 60 * 60 * 24 * 90,
+	blockDuration: 60 * 60
+})
 
 /**
  * Verifies the refresh token jwt and sends a new access token
@@ -12,35 +30,36 @@ import { models } from '../../sequelize'
  * @returns new access token assuming refreshtoken OK
  * @returns 401 status if errors
  */
-export const verifyJWT = async (req: Request, res: Response, next: NextFunction) => {
+export const verifyJWT = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
 	const errors = validationResult(req)
 	if (!errors.isEmpty()) {
-		return next(ApiError.unauthorized())
+		next(ApiError.unauthorized())
+		return
 	}
-	const tokenFromDB = await models.Token.findOne({ where: { token: req.body.token } })
-	if (tokenFromDB == null) {
-		return next(ApiError.forbidden())
+	if (process.env.ACCESS_TOKEN_SECRET == null || process.env.ACCESS_TOKEN_EXPIRE_MINUTES == null || process.env.REFRESH_TOKEN_SECRET == null) {
+		next(ApiError.environmentNotSet())
+		return
 	}
-	verify(tokenFromDB.get('token'),
-		process.env.REFRESH_TOKEN_SECRET!,
-		(err: any, user: any) => {
-			if (err) {
-				return next(ApiError.forbidden())
-			}
-			else {
-				sign({ id: user.id, name: user.name },
-					process.env.ACCESS_TOKEN_SECRET!,
-					{ expiresIn: `${process.env.ACCESS_TOKEN_EXPIRE_MINUTES!}m` },
-					(err, accessToken) => {
-						if (err) {
-							return next(ApiError.forbidden())
-						}
-						else {
-							return res.json(accessToken)
-						}
-					})
-			}
-		})
+	try {
+		const tokenFromDB = await models.Token.findOne({ where: { token: req.body.token } })
+		if (tokenFromDB == null) {
+			return next(ApiError.forbidden())
+		}
+		const token = verify(tokenFromDB.get('token'), process.env.REFRESH_TOKEN_SECRET)
+		if (typeof token === 'string') {
+			next(ApiError.forbidden('Token incorrect'))
+			return
+		}
+		if (token.id == null || token.name == null) {
+			next(ApiError.forbidden('Token incorrect'))
+			return
+		}
+		const accessToken = sign({ id: token.id, name: token.name }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: `${process.env.ACCESS_TOKEN_EXPIRE_MINUTES}m` })
+		res.json(accessToken)
+	}
+	catch (err) {
+		next(err)
+	}
 }
 
 /**
@@ -50,45 +69,59 @@ export const verifyJWT = async (req: Request, res: Response, next: NextFunction)
  * @returns an access token and refresh token from user
  * @returns 401 if no user
  */
-export const login = async (req: Request, res: Response, next: NextFunction) => {
+export const login = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+	const ipAddr = req.ip
+	const usernameIpKey = `${req.body.name}_${ipAddr}`
+	const [resUsernameAndIP, resSlowByIP] = await Promise.all([
+		limiterConsecutiveFailsByUsernameAndIP.get(usernameIpKey),
+		limiterSlowBruteByIP.get(ipAddr)
+	])
+
+	if (resSlowByIP !== null && resSlowByIP.consumedPoints > maxWrongAttemptsByIPperDay) {
+		const retrySecs = Math.round(resSlowByIP.msBeforeNext / 1000) || 1
+		res.set('Retry-After', retrySecs.toString())
+		next(ApiError.tooManyRequests())
+		return
+	}
+	else if (resUsernameAndIP !== null && resUsernameAndIP.consumedPoints > maxConsecutiveFailsByUsernameAndIP) {
+		const retrySecs = Math.round(resUsernameAndIP.msBeforeNext / 1000) || 1
+		res.set('Retry-After', retrySecs.toString())
+		next(ApiError.tooManyRequests('Too many failed login attempts'))
+		return
+	}
 	const errors = validationResult(req)
 	if (!errors.isEmpty()) {
-		return next(ApiError.unauthorized())
+		next(ApiError.unauthorized())
+		return
 	}
-	const user = await models.User.findOne({ where: { name: req.body.name } })
-	if (!user) {
-		return next(ApiError.unauthorized())
+	if (process.env.ACCESS_TOKEN_SECRET == null || process.env.ACCESS_TOKEN_EXPIRE_MINUTES == null || process.env.REFRESH_TOKEN_SECRET == null || process.env.REFRESH_TOKEN_EXPIRE_MINUTES == null) {
+		next(ApiError.environmentNotSet())
+		return
 	}
-	else {
+	try {
+		const user = await models.User.findOne({ where: { name: req.body.name } })
+		const promises = [limiterSlowBruteByIP.consume(ipAddr)]
+		if (!user) {
+			await Promise.all(promises)
+			next(ApiError.unauthorized())
+			return
+		}
 		const { id, name, password } = user.get()
 		const compared = await compare(req.body.password, password)
 		if (compared === false) {
-			return next(ApiError.unauthorized())
+			promises.push(limiterConsecutiveFailsByUsernameAndIP.consume(usernameIpKey))
+			await Promise.all(promises)
+			next(ApiError.unauthorized())
+			return
 		}
-		else {
-			sign({ id, name },
-					process.env.ACCESS_TOKEN_SECRET!,
-					{ expiresIn: `${process.env.ACCESS_TOKEN_EXPIRE_MINUTES!}m` },
-					(err, accessToken) => {
-						if (err || accessToken == null) {
-							return next(ApiError.forbidden())
-						}
-						else {
-							sign({ id, name },
-							process.env.REFRESH_TOKEN_SECRET!,
-							{ expiresIn: `${process.env.REFRESH_TOKEN_EXPIRE_MINUTES!}m` },
-							async (err, refreshToken) => {
-								if (err || refreshToken == null) {
-									return next(ApiError.forbidden())
-								}
-								else {
-									await models.Token.create({ token: refreshToken })
-									return res.json({ message: 'Verified', accessToken, refreshToken })
-								}
-							})
-						}
-					})
-		}
+		const accessToken = sign({ id, name }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: `${process.env.ACCESS_TOKEN_EXPIRE_MINUTES}m` })
+		const refreshToken = sign({ id, name }, process.env.REFRESH_TOKEN_SECRET, { expiresIn: `${process.env.REFRESH_TOKEN_EXPIRE_MINUTES}m` })
+		await models.Token.create({ token: refreshToken })
+		await limiterConsecutiveFailsByUsernameAndIP.delete(usernameIpKey)
+		res.json({ message: 'Verified', accessToken, refreshToken })
+	}
+	catch (err) {
+		next(err)
 	}
 }
 
@@ -99,13 +132,21 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
  * @returns successful logout message
  * @returns 500 if server issue
  */
-export const logout = async (req: Request, res: Response, next: NextFunction) => {
+export const logout = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
 	const errors = validationResult(req)
 	if (!errors.isEmpty()) {
-		return res.status(400).json({ errors: errors.array() })
+		next(ApiError.validationErrors(errors.array()))
+		return
 	}
-	const value = await models.Token.destroy({ where: { token: req.body.token } })
-	return (value)
-		? res.status(200).send('Success')
-		: next(ApiError.notFound('Token does not exist'))
+	try {
+		const value = await models.Token.destroy({ where: { token: req.body.token } })
+		if (!value) {
+			next(ApiError.notFound('Token does not exist'))
+			return
+		}
+		res.send('Success')
+	}
+	catch (err) {
+		next(err)
+	}
 }

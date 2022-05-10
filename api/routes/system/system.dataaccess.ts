@@ -3,7 +3,7 @@ import { readdir, stat } from 'fs/promises'
 import { NextFunction, Request, Response } from 'express'
 import { imagesPublicFolderPath, otherPublicFolderPath } from '../../'
 
-export const getImagesSize = async (_req: Request, res: Response, next: NextFunction) => {
+export const getImagesSize = async (_req: Request, res: Response, next: NextFunction): Promise<void> => {
 	try {
 		const images = await readdir(imagesPublicFolderPath)
 		const sizes = []
@@ -12,14 +12,14 @@ export const getImagesSize = async (_req: Request, res: Response, next: NextFunc
 			sizes.push(size)
 		}
 		const totalSize = sizes.reduce((total, el) => total + el, 0)
-		return res.json(totalSize)
+		res.json(totalSize)
 	}
 	catch (err) {
 		next(err)
 	}
 }
 
-export const getOthersSize = async (_req: Request, res: Response, next: NextFunction) => {
+export const getOthersSize = async (_req: Request, res: Response, next: NextFunction): Promise<void> => {
 	try {
 		const other = await readdir(otherPublicFolderPath)
 		const sizes = []
@@ -28,14 +28,14 @@ export const getOthersSize = async (_req: Request, res: Response, next: NextFunc
 			sizes.push(size)
 		}
 		const totalSize = sizes.reduce((total, el) => total + el, 0)
-		return res.json(totalSize)
+		res.json(totalSize)
 	}
 	catch (err) {
 		next(err)
 	}
 }
 
-export const getPublicDirSize = async (_req: Request, res: Response, next: NextFunction) => {
+export const getPublicDirSize = async (_req: Request, res: Response, next: NextFunction): Promise<void> => {
 	try {
 		const other = await readdir(otherPublicFolderPath)
 		const images = await readdir(imagesPublicFolderPath)
@@ -53,43 +53,43 @@ export const getPublicDirSize = async (_req: Request, res: Response, next: NextF
 			imagesSize: imagesArr.reduce((total, el) => total + el, 0),
 			othersSize: othersArr.reduce((total, el) => total + el, 0)
 		}
-		return res.json(obj)
+		res.json(obj)
 	}
 	catch (err) {
 		next(err)
 	}
 }
 
-export const getMaxSpace = (_req: Request, res: Response, _next: NextFunction) => {
+export const getMaxSpace = (_req: Request, res: Response, _next: NextFunction): void => {
 	const space = (process.env.MAX_SPACE_ALLOWED_BYTES != null) ? Number.parseInt(process.env.MAX_SPACE_ALLOWED_BYTES) : 0
-	return res.json(space)
+	res.json(space)
 }
 
-export const getImages = async (_req: Request, res: Response, next: NextFunction) => {
+export const getImages = async (_req: Request, res: Response, next: NextFunction): Promise<void> => {
 	try {
 		const images = (await readdir(imagesPublicFolderPath)).map((el) => join('images', el))
-		return res.json(images)
+		res.json(images)
 	}
 	catch (err) {
 		next(err)
 	}
 }
 
-export const getOther = async (_req: Request, res: Response, next: NextFunction) => {
+export const getOther = async (_req: Request, res: Response, next: NextFunction): Promise<void> => {
 	try {
 		const other = (await readdir(otherPublicFolderPath)).map((el) => join('other', el))
-		return res.json(other)
+		res.json(other)
 	}
 	catch (err) {
 		next(err)
 	}
 }
 
-export const getAll = async (_req: Request, res: Response, next: NextFunction) => {
+export const getAll = async (_req: Request, res: Response, next: NextFunction): Promise<void> => {
 	try {
 		const images = (await readdir(imagesPublicFolderPath)).map((el) => join('images', el))
 		const other = (await readdir(otherPublicFolderPath)).map((el) => join('other', el))
-		return res.json({ images, other })
+		res.json({ images, other })
 	}
 	catch (err) {
 		next(err)

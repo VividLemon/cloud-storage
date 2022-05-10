@@ -5,11 +5,12 @@ import { validationResult } from 'express-validator'
 import { publicFolderPath } from '../../'
 import { ApiError } from '../../error'
 
-export const store = (req: Request, res: Response) => {
+export const store = (req: Request, res: Response, next: NextFunction): void => {
 	if (!req.files) {
-		return res.status(400).json({ errors: [{ msg: 'No file exists', location: 'store' }] })
+		next(ApiError.badRequest('No file exists'))
+		return
 	}
-
+	res.sendStatus(200)
 	// Add custom name function
 	// If name is added, force it to that name, otherwise uuid it
 	// TODO update will be req.file
@@ -18,27 +19,31 @@ export const store = (req: Request, res: Response) => {
 	// Frontend will need to see the type of file. Then it will do a transition to ask if it wants to compress image.
 }
 
-export const update = (req: Request, res: Response) => {
+export const update = (req: Request, res: Response, next: NextFunction): void => {
 	if (!req.file) {
-		return res.status(400).json({ errors: [{ msg: 'Image file must exist', location: 'update' }] })
+		next(ApiError.badRequest('No file exists'))
+		return
 	}
+	res.sendStatus(200)
 	// TODO add change name function, req.file will be optional, vuelidate on frontend to be either or
 }
 
-export const destroy = async (req: Request, res: Response, next: NextFunction) => {
+export const destroy = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
 	const errors = validationResult(req)
 	if (!errors.isEmpty()) {
-		return res.status(400).json({ errors: errors.array() })
+		next(ApiError.validationErrors(errors.array()))
+		return
 	}
 	try {
 		const pathToFolder = join(publicFolderPath, req.body.folder)
 		const items = await readdir(pathToFolder)
 		const item = items.find((el) => el === req.body.item)
 		if (item == null) {
-			return next(ApiError.internal('No file by that name found!'))
+			next(ApiError.internal('No file by that name found!'))
+			return
 		}
 		await unlink(join(pathToFolder, req.body.item))
-		return res.status(200).send('Deleted')
+		res.status(200).send('Deleted')
 	}
 	catch (err) {
 		next(err)

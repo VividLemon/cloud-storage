@@ -1,3 +1,5 @@
+import { ValidationError } from 'express-validator'
+
 export default class ApiError {
 	code: number
 	message: string
@@ -25,5 +27,17 @@ export default class ApiError {
 
 	static notFound(message = 'Not found') {
 		return new ApiError(404, message)
+	}
+
+	static validationErrors(errors: Array<ValidationError>) {
+		return new ApiError(400, `Incorrect fields: ${errors.map((el) => `${el.param} in ${el.location}`).join(', ')}`)
+	}
+
+	static environmentNotSet() {
+		return new ApiError(500, 'Environment Variables not set')
+	}
+
+	static tooManyRequests(message = 'Too many requests') {
+		return new ApiError(429, message)
 	}
 }
